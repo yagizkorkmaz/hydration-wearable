@@ -2,11 +2,11 @@
 
 A wrist-worn sensor node and companion iOS app for non-invasive hydration monitoring. An ESP32-S3 samples skin conductance (GSR), optical PPG (red + IR), skin temperature and humidity and streams them over Bluetooth Low Energy. The iPhone app logs the data, estimates heart rate from the PPG signal and classifies water need (low / moderate / high) with a k-NN model.
 
-This is a research prototype, not a medical device.
+Graduation project, Istanbul Bilgi University, B.Sc. Electrical and Electronics Engineering, 2026. This is a research prototype, not a medical device.
 
-**TODO: add one photo of the board / device and one screenshot of the app here** (`docs/device.jpg`, `docs/app.png`)
+<img src="docs/prototype.jpg" alt="Prototype worn on the wrist with GSR electrodes on two fingers" width="640">
 
-**TODO: one line of context**, e.g. "Graduation project, Istanbul Bilgi University, Electrical and Electronics Engineering, 2026."
+*The prototype: hand-wired on perfboard, worn on the wrist, with the GSR electrodes on two fingers.*
 
 ## How it works
 
@@ -23,6 +23,12 @@ The ESP32-S3 samples all sensors in a non-blocking loop, shows live values on th
 
 ## Hardware
 
+There are two hardware stages in this repository: the working prototype that the firmware runs on, and a PCB design that integrates the same circuit on one board.
+
+### Working prototype
+
+Hand-wired on perfboard with an ESP32-S3 board and sensor modules.
+
 | Part | Role | Interface | Pin / address |
 |---|---|---|---|
 | ESP32-S3 | MCU, BLE radio | – | – |
@@ -33,7 +39,33 @@ The ESP32-S3 samples all sensors in a non-blocking loop, shows live values on th
 
 I2C bus: SDA on GPIO8, SCL on GPIO9, 400 kHz.
 
-**TODO: PCB details** – designed in KiCad; add layer count, board size, power source, and whether the board was manufactured and assembled. Put the schematic PDF and Gerber/BOM/drill outputs in `hardware/`.
+### PCB design
+
+KiCad 10 project in `hardware/` (`bitirme2.kicad_pro`, schematic and board).
+
+| Item | Value |
+|---|---|
+| Board | 57 × 39 mm, 2 copper layers, 1.6 mm |
+| Routing | 0.2 mm tracks on the top layer, ground pour on the bottom layer |
+| Components | 32, all on the top side, 0603 passives |
+| MCU | ESP32-C3 SuperMini module on through-hole headers |
+| GSR front end | LM324 op-amp stage with a 200 kΩ trimmer, electrode input on a 2-pin connector, output on GPIO4 |
+| On-board sensors | SHT30 temperature/humidity (I2C 0x44), MPU-6050 IMU (I2C 0x68) |
+| I2C | SDA on GPIO8, SCL on GPIO9, 4.7 kΩ pull-ups |
+| Test points | SDA, SCL, VCC, GND |
+
+The GSR front end follows the Seeed Studio Grove GSR sensor circuit. The pin assignment (GPIO4, GPIO8, GPIO9) is the same as in the firmware, so the firmware can be moved between the two boards without changing pins.
+
+Differences from the working prototype:
+
+- The PCB is designed around the ESP32-C3 SuperMini; the prototype and the firmware in this repository use an ESP32-S3.
+- The PCB adds an MPU-6050 for motion sensing. The current firmware does not read it yet.
+- The MAX30102 and the OLED are not on the PCB; they connect as external modules on the I2C bus.
+
+Known issues in the board file, to fix before fabrication:
+
+- The ground pads of the surface-mount parts are not connected. The ground pour is on the bottom layer and the board has no vias, so only the through-hole ground pins reach it. It needs a ground pour on the top layer or vias next to the ground pads.
+- The SCL test point is not routed.
 
 ## Firmware
 
@@ -100,7 +132,7 @@ gsr_mean, gsr_sd, gsr_slope, red_mean, red_sd, ir_mean, ir_sd, red_ir_ratio
 
 The current firmware does not call the C version yet; inference runs on the phone.
 
-**TODO:** the training script and the recorded data are not in this repository. Add them under `analysis/` or describe how the model was produced.
+The training script and the recorded sessions are not included in this repository.
 
 ## iOS app (Hydration Logger)
 
@@ -185,8 +217,8 @@ Unexpected binary payloads are written as hex (`0x...`) instead of being dropped
 firmware/hydration_sensor/   ESP32-S3 firmware
 model/                       k-NN model as a C header
 app/                         iOS app: project.yml and HydrationLogger/ sources
-hardware/                    TODO: KiCad project, schematic PDF, Gerber, BOM, drill files
-docs/                        TODO: photos and screenshots
+hardware/                    KiCad project: schematic and PCB layout
+docs/                        photos
 ```
 
 ## Status and limitations
@@ -196,8 +228,4 @@ docs/                        TODO: photos and screenshots
 - Classification runs in the app. Moving it onto the ESP32 with `model/hydration_model.h` is the next step.
 - Deep sleep and the power button are disabled in this firmware build. An earlier build put the device to sleep shortly after boot when GPIO5 read low; GPIO5 is now only read for diagnostics.
 - PPG is sampled at 100 Hz on the sensor but only the latest value is sent at 5 Hz, which limits heart rate to 132 bpm and rules out waveform analysis. Sending at 25 Hz or computing heart rate on the ESP32 would remove this limit.
-- **TODO: results** – what was tested and what the outcome was.
-
-## Team
-
-**TODO:** list team members and who did what (firmware, PCB, iOS app, model, sensor integration).
+- The PCB in `hardware/` is a design file with open issues (see Hardware); the system has been tested on the perfboard prototype only.
