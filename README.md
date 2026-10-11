@@ -41,7 +41,11 @@ I2C bus: SDA on GPIO8, SCL on GPIO9, 400 kHz.
 
 ### PCB design
 
-KiCad 10 project in `hardware/` (`bitirme2.kicad_pro`, schematic and board).
+KiCad 10 project in `hardware/` (`bitirme2.kicad_pro`, schematic and board). The board was fabricated and partially assembled.
+
+<img src="docs/pcb.jpg" alt="Fabricated PCB with the sensors, op-amp and passives soldered" width="420">
+
+*The fabricated board with the SHT30, MPU-6050, LM324 and passives soldered. The ESP32-C3 module, the trimmer and the connectors are not fitted in this photo.*
 
 | Item | Value |
 |---|---|
@@ -62,9 +66,9 @@ Differences from the working prototype:
 - The PCB adds an MPU-6050 for motion sensing. The current firmware does not read it yet.
 - The MAX30102 and the OLED are not on the PCB; they connect as external modules on the I2C bus.
 
-Known issues in the board file, to fix before fabrication:
+Known issues in the board file:
 
-- The ground pads of the surface-mount parts are not connected. The ground pour is on the bottom layer and the board has no vias, so only the through-hole ground pins reach it. It needs a ground pour on the top layer or vias next to the ground pads.
+- The ground pads of the surface-mount parts are not connected. The ground pour is on the bottom layer and the board has no vias, so only the through-hole ground pins reach it. A revision needs a ground pour on the top layer or vias next to the ground pads.
 - The SCL test point is not routed.
 
 ## Firmware
@@ -228,4 +232,4 @@ docs/                        photos
 - Classification runs in the app. Moving it onto the ESP32 with `model/hydration_model.h` is the next step.
 - Deep sleep and the power button are disabled in this firmware build. An earlier build put the device to sleep shortly after boot when GPIO5 read low; GPIO5 is now only read for diagnostics.
 - PPG is sampled at 100 Hz on the sensor but only the latest value is sent at 5 Hz, which limits heart rate to 132 bpm and rules out waveform analysis. Sending at 25 Hz or computing heart rate on the ESP32 would remove this limit.
-- The PCB in `hardware/` is a design file with open issues (see Hardware); the system has been tested on the perfboard prototype only.
+- The PCB was fabricated and partially assembled, but the board file has open issues (see Hardware). The firmware and the recordings in this repository come from the perfboard prototype.
